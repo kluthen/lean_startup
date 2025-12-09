@@ -1,0 +1,16 @@
+{
+	"name": "Untitled Node.js project",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+"remoteUser": "node",
+"customizations": {
+	"vscode": {
+		"extensions": [
+			"Vue.volar",
+			"yzhang.markdown-all-in-one",
+			"bradlc.vscode-tailwindcss"
+		]
+	}
+}
+}
