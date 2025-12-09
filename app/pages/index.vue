@@ -55,11 +55,14 @@ async function generate() {
   
   // Flatten constraints
   const flatConstraints = guests.value.flatMap(g => 
-    g.constraints.map(c => ({
-      guestId: g.name,
-      attributeId: c.attributeId,
-      weight: getWeightByStep(c.stepValue).value
-    }))
+    g.constraints.map(c => {
+       const attrId = typeof c.attributeId === 'object' ? (c.attributeId as any).id : c.attributeId
+       return {
+          guestId: g.name,
+          attributeId: attrId,
+          weight: getWeightByStep(c.stepValue).value
+       }
+    })
   ).filter(c => c.attributeId) // Ensure ID is set
 
   try {
@@ -69,11 +72,24 @@ async function generate() {
     
     // Store in localStorage or useNuxtState to pass to /meal
     const mealState = useState('mealData')
+    const constraintsState = useState('mealConstraints')
+    
+    // Sanitize state for consumption by meal.vue
+    const cleanGuests = guests.value.map(g => ({
+        ...g,
+        constraints: g.constraints.map(c => ({
+            ...c,
+            attributeId: typeof c.attributeId === 'object' ? (c.attributeId as any).id : c.attributeId,
+            weight: getWeightByStep(c.stepValue).value 
+        }))
+    }))
+    
     const result = await $fetch('/api/generate', {
       method: 'POST',
       body: { constraints: flatConstraints }
     })
     
+    constraintsState.value = cleanGuests 
     mealState.value = result
     router.push('/meal')
     

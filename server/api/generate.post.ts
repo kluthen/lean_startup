@@ -2,7 +2,7 @@ import { generateMeal, type GuestConstraint } from '../utils/meal-generator'
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event)
-    const { constraints } = body as { constraints: GuestConstraint[] }
+    const { constraints } = body
 
     if (!constraints) {
         return { error: "No constraints provided" }

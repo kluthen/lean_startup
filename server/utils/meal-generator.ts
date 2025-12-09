@@ -69,7 +69,7 @@ export async function generateMeal(constraints: GuestConstraint[]) {
 
     const validRecipes = ratedRecipes.filter(r => r.valid);
 
-    const proteins = validRecipes.filter(r => r.plate_elements.some((pe: any) => pe.code === 'proteine'));
+    const proteins = validRecipes.filter(r => r.plate_elements.some((pe: any) => pe.code === 'protein'));
     const starchs = validRecipes.filter(r => r.plate_elements.some((pe: any) => pe.code === 'feculent'));
     const sides = validRecipes.filter(r => r.plate_elements.some((pe: any) => pe.code === 'accompagnement'));
     const sauces = validRecipes.filter(r => r.plate_elements.some((pe: any) => pe.code === 'sauce'));
