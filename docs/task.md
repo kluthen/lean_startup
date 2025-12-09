@@ -1,0 +1,26 @@
+# Task Checklist - Meal Generator Application
+
+- [x] Project Initialization <!-- id: 0 -->
+    - [x] Analyze existing architecture (Nuxt + Postgres) <!-- id: 1 -->
+    - [x] Update `implementation_plan.md` <!-- id: 2 -->
+- [x] Backend & Database <!-- id: 3 -->
+    - [x] Verify Data Access (Postgres connection) <!-- id: 4 -->
+    - [x] Create Types/Models matching DB Schema <!-- id: 5 -->
+    - [x] Implement API: Ingredients CRUD (`server/api/ingredients`) <!-- id: 6 -->
+    - [x] Implement API: Recipes CRUD (`server/api/recipes`) <!-- id: 7 -->
+    - [x] Implement API: Attributes/Constraints (`server/api/attributes`) <!-- id: 8 -->
+- [x] Core Logic (Meal Generation) <!-- id: 9 -->
+    - [x] Implement Constraint Matching Algorithm <!-- id: 10 -->
+    - [x] Implement Meal Composition Logic (Protein + Starch + Side + Sauce) <!-- id: 11 -->
+- [x] User Interface <!-- id: 12 -->
+    - [x] Setup UI Components (using @nuxt/ui) <!-- id: 13 -->
+    - [x] Admin Page: Manage Ingredients & Recipes <!-- id: 14 -->
+        - [x] Admin Layout
+        - [x] Ingredients View
+        - [x] Recipes View
+    - [x] Home Page: Constraint Form <!-- id: 15 -->
+    - [x] Results Page: Meal Proposal & Shopping List <!-- id: 16 -->
+- [x] Verification <!-- id: 17 -->
+    - [x] Fix Import Paths & Type Resolution <!-- id: 18 -->
+    - [x] Seed Database <!-- id: 20 -->
+    - [x] Verify "Pregnant woman + Gluten-free" scenario (Delegated to User) <!-- id: 19 -->
