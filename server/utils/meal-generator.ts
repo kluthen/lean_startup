@@ -78,19 +78,22 @@ export async function generateMeal(constraints: GuestConstraint[]) {
     // In future: Randomize among top 3 to vary.
 
     return {
-        proteine: pickBest(proteins),
-        feculent: pickBest(starchs),
-        accompagnement: pickBest(sides),
-        sauce: pickBest(sauces),
+        proteine: getSelection(proteins),
+        feculent: getSelection(starchs),
+        accompagnement: getSelection(sides),
+        sauce: getSelection(sauces),
         warning: validRecipes.length === 0 ? "No valid recipes found for criteria" : null
     };
 }
 
-function pickBest(candidates: RatedRecipe[]) {
-    if (candidates.length === 0) return null;
+function getSelection(candidates: RatedRecipe[]) {
+    if (candidates.length === 0) return { selected: null, alternatives: [] };
     // Sort desc score
     candidates.sort((a, b) => b.score - a.score);
-    return candidates[0];
+    return {
+        selected: candidates[0],
+        alternatives: candidates
+    };
 }
 
 function rateRecipe(recipe: any, constraints: GuestConstraint[]): RatedRecipe {

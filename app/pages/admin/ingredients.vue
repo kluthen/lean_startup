@@ -47,7 +47,13 @@ async function deleteIngredient(id: string) {
     </div>
 
     <UCard>
-      <UTable :rows="ingredients || []" :columns="[{ key: 'name', label: 'Name' }, { key: 'actions', label: '' }]">
+      <UTable 
+        :rows="ingredients || []" 
+        :columns="[
+            { key: 'name', label: 'Name', id: 'name' }, 
+            { key: 'actions', label: '', id: 'actions' }
+        ]"
+      >
         <template #actions-data="{ row }">
           <UButton 
             color="red" 
