@@ -23,10 +23,10 @@ if (mealConstraints.value && mealConstraints.value.length) {
 }
 
 const weights: { label: string; value: string; step: number; color: 'error' | 'warning' | 'success' | 'primary' }[] = [
-  { label: 'Forbidden', value: '--', step: 0, color: 'error' },
-  { label: 'Avoid', value: '-', step: 1, color: 'warning' },
-  { label: 'Preferred', value: '+', step: 2, color: 'success' },
-  { label: 'Mandatory', value: '++', step: 3, color: 'primary' },
+  { label: 'Interdit', value: '--', step: 0, color: 'error' },
+  { label: 'Eviter', value: '-', step: 1, color: 'warning' },
+  { label: 'Preferer', value: '+', step: 2, color: 'success' },
+  { label: 'Obligatoire', value: '++', step: 3, color: 'primary' },
 ]
 
 function getWeightByStep(step: number) {
