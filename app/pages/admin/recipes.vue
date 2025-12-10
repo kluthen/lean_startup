@@ -10,6 +10,7 @@ const attributes = computed(() => {
   return attributesRaw.value?.map(attr => ({
     id: attr.id,
     label: `${attr.type}: ${attr.value}`,
+    name: attr.value,
     attr_type: attr.type,
     attr_value: attr.value
   })) || []
@@ -123,8 +124,8 @@ async function deleteRecipe(id: string) {
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold">Recipes</h2>
-      <UButton icon="i-heroicons-plus" @click="isOpen = true">Add Recipe</UButton>
+      <h2 class="text-xl font-semibold">Recettes</h2>
+      <UButton icon="i-heroicons-plus" @click="isOpen = true">Ajouter une recette</UButton>
     </div>
 
     <div class="grid gap-4">
@@ -147,20 +148,20 @@ async function deleteRecipe(id: string) {
       </UCard>
     </div>
  
-    <UModal v-model:open="isOpen" :title="isEditing ? 'Edit Recipe' : 'New Recipe'" :ui="{ content: 'sm:max-w-3xl' }">
+    <UModal v-model:open="isOpen" :title="isEditing ? 'Modifier une recette' : 'Nouvelle recette'" :ui="{ content: 'sm:max-w-3xl' }">
       <template #body>
         <form @submit.prevent="createRecipe" class="space-y-6">
           <div class="grid md:grid-cols-2 gap-4">
-            <UFormField label="Name" required>
+            <UFormField label="Nom" required>
               <UInput v-model="form.name" />
             </UFormField>
-            <UFormField label="Plate Category">
+            <UFormField label="Catégorie">
               <USelectMenu 
                 v-model="form.selectedPlateElements" 
                 :items="plateElements || []" 
                 option-attribute="label"
                 multiple 
-                placeholder="Select category..."
+                placeholder="Selectionner une catégorie..."
               />
             </UFormField>
           </div>
@@ -172,18 +173,18 @@ async function deleteRecipe(id: string) {
           <!-- Ingredients Section -->
           <div>
             <div class="flex justify-between items-center mb-2">
-              <h4 class="font-semibold text-sm">Ingredients</h4>
-              <UButton size="xs" variant="soft" icon="i-heroicons-plus" @click="addIngredientRow">Add</UButton>
+              <h4 class="font-semibold text-sm">Ingrédients</h4>
+              <UButton size="xs" variant="soft" icon="i-heroicons-plus" @click="addIngredientRow">Ajouter</UButton>
             </div>
             
             <div v-for="(item, idx) in form.ingredients" :key="idx" class="flex gap-2 mb-2 items-start">
               <USelectMenu
                 v-model="item.ingredientId"
-                :options="ingredients || []"
-                option-attribute="name"
-                value-attribute="id"
+                :items="ingredients || []"
+                valueLabel="name"
+                valueKey="id"
                 searchable
-                placeholder="Ingredient"
+                placeholder="Ingrédient"
                 class="flex-1"
               />
               <UInput v-model.number="item.quantity" type="number" placeholder="Qty" class="w-20" />
@@ -203,7 +204,7 @@ async function deleteRecipe(id: string) {
                 :items="attributes || []" 
                 multiple 
                 searchable
-                placeholder="Search attributes..."
+                placeholder="Rechercher des attributs..."
               >
                  <template #item="{ item }">
                     <span class="truncate">{{ item.attr_type }}: {{ item.attr_value }}</span>
@@ -212,8 +213,8 @@ async function deleteRecipe(id: string) {
             </UFormField>
 
           <div class="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <UButton variant="ghost" @click="isOpen = false">Cancel</UButton>
-            <UButton type="submit" :loading="loading">{{ isEditing ? 'Update' : 'Create' }}</UButton>
+            <UButton variant="ghost" @click="isOpen = false">Annuler</UButton>
+            <UButton type="submit" :loading="loading">{{ isEditing ? 'Mettre à jour' : 'Créer' }}</UButton>
           </div>
         </form>
       </template>

@@ -8,7 +8,7 @@ defineProps<{
   <div class="bg-gray-50 dark:bg-gray-900 p-8 rounded-xl h-fit">
      <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
         <UIcon name="i-heroicons-shopping-bag" />
-        Shopping List
+        Liste des courses
      </h2>
      
      <ul class="space-y-3">

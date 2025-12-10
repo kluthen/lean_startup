@@ -15,14 +15,14 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <UModal v-model:open="open" :title="`Replacing ${ingredient?.name}`">
+  <UModal v-model:open="open" :title="`Remplacer ${ingredient?.name}`">
       <template #body>
           <div v-if="loading" class="flex justify-center p-8">
               <UIcon name="i-heroicons-arrow-path" class="animate-spin text-3xl text-primary-500" />
           </div>
           <div v-else-if="alternatives.length === 0" class="text-center p-8 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <UIcon name="i-heroicons-face-frown" class="text-4xl mb-2 text-gray-400" />
-              <p>No compatible alternatives found matching the current guest constraints.</p>
+              <p>Aucune alternative compatible trouvée pour les contraintes actuelles.</p>
           </div>
           <div v-else class="space-y-2 max-h-60 overflow-y-auto p-1">
               <UButton

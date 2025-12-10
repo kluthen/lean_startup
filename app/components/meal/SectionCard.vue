@@ -36,7 +36,7 @@ const emit = defineEmits<{
                 @update:model-value="(val) => emit('swap', val)"
                 :items="section.data.alternatives"
                 option-attribute="name"
-                placeholder="Swap..."
+                placeholder="Remplacer..."
                 class="w-48"
                 size="xs"
             />
@@ -55,7 +55,7 @@ const emit = defineEmits<{
          <UAccordion :items="[{ label: 'Ingredients & Details', slot: 'details' }]" class="mt-4">
             <template #details>
                 <div class="p-2 space-y-2">
-                    <h4 class="font-bold text-sm">Ingredients:</h4>
+                    <h4 class="font-bold text-sm">Ingrédients:</h4>
                     <ul class="space-y-1 mt-2">
                         <li v-for="ing in (section.data.selected as any).ingredients" :key="ing.ingredientId" class="flex items-center gap-2 group text-sm text-gray-700 dark:text-gray-300">
                             <span class="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
@@ -71,7 +71,7 @@ const emit = defineEmits<{
                                 variant="ghost" 
                                 class="opacity-0 group-hover:opacity-100 transition-opacity"
                                 @click="emit('open-swap-modal', ing)"
-                                title="Swap ingredient"
+                                title="Remplacer l'ingrédient"
                             />
                         </li>
                     </ul>
@@ -93,6 +93,6 @@ const emit = defineEmits<{
             <div v-for="iss in (section.data.selected as any).issues">{{ iss }}</div>
          </div>
      </div>
-     <div v-else class="text-gray-400 italic">No option selected</div>
+     <div v-else class="text-gray-400 italic">Aucune option sélectionnée</div>
   </UCard>
 </template>

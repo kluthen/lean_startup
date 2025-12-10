@@ -117,7 +117,7 @@ function confirmIngredientSwap(newIng: any) {
 <template>
   <UContainer class="py-10">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-      <UButton to="/" icon="i-heroicons-home" variant="soft">Return Home</UButton>
+      <UButton to="/" icon="i-heroicons-home" variant="soft">Retour à l'accueil</UButton>
     </div>
     
     <div v-if="mealState?.warning" class="mb-6">
@@ -131,7 +131,7 @@ function confirmIngredientSwap(newIng: any) {
       <!-- Menu Card matches layout -->
       <div :class="guests && guests.length ? 'lg:col-span-1' : 'lg:col-span-2'">
         <h2 class="text-3xl font-serif font-bold mb-6 text-primary-600 dark:text-primary-400">
-          Proposed Menu
+          Menu proposé
         </h2>
         <div class="space-y-6">
           <MealSectionCard 

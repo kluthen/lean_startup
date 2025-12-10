@@ -19,13 +19,13 @@ async function addIngredient() {
         method: 'PUT',
         body: { name: newIngredientName.value }
       })
-      toast.add({ title: 'Success', description: 'Ingredient updated' })
+      toast.add({ title: 'Success', description: 'Ingredient modifié' })
     } else {
       await $fetch('/api/ingredients', {
         method: 'POST',
         body: { name: newIngredientName.value }
       })
-      toast.add({ title: 'Success', description: 'Ingredient added' })
+      toast.add({ title: 'Success', description: 'Ingredient ajouté' })
     }
     
     newIngredientName.value = ''
@@ -34,20 +34,20 @@ async function addIngredient() {
     editingId.value = null
     refresh()
   } catch (error: any) {
-    toast.add({ title: 'Error', description: error.statusMessage || 'Failed to save', color: 'error' })
+    toast.add({ title: 'Error', description: error.statusMessage || 'Erreur lors de la sauvegarde', color: 'error' })
   } finally {
     loading.value = false
   }
 }
 
 async function deleteIngredient(id: string) {
-  if (!confirm('Are you sure?')) return
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cet ingredient?')) return
   try {
     await $fetch(`/api/ingredients/${id}`, { method: 'DELETE' })
-    toast.add({ title: 'Deleted', description: 'Ingredient removed' })
+    toast.add({ title: 'Deleted', description: 'Ingredient supprimé' })
     refresh()
   } catch (error) {
-    toast.add({ title: 'Error', description: 'Failed', color: 'error' })
+    toast.add({ title: 'Error', description: 'Erreur lors de la suppression', color: 'error' })
   }
 }
 
@@ -69,15 +69,15 @@ function close() {
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold">Ingredients List</h2>
-      <UButton icon="i-heroicons-plus" @click="isOpen = true; isEditing = false; newIngredientName = ''">Add Ingredient</UButton>
+      <h2 class="text-xl font-semibold">Liste des ingredients</h2>
+      <UButton icon="i-heroicons-plus" @click="isOpen = true; isEditing = false; newIngredientName = ''">Ajouter un ingredient</UButton>
     </div>
 
     <UCard>
       <UTable 
         :data="ingredients || []" 
         :columns="[
-            { accessorKey: 'name', header: 'Name' }, 
+            { accessorKey: 'name', header: 'Nom' }, 
             { accessorKey: 'actions', header: '' }
         ]"
       >
@@ -102,16 +102,16 @@ function close() {
       </UTable>
     </UCard>
 
-    <UModal v-model:open="isOpen" :title="isEditing ? 'Edit Ingredient' : 'New Ingredient'">
+    <UModal v-model:open="isOpen" :title="isEditing ? 'Modifier un ingredient' : 'Ajouter un ingredient'">
       <template #body>
         <form @submit.prevent="addIngredient" class="space-y-4">
-          <UFormField label="Name" required>
+          <UFormField label="Nom" required>
             <UInput v-model="newIngredientName" placeholder="e.g. Tomatoes" autofocus />
           </UFormField>
           
           <div class="flex justify-end gap-2">
-            <UButton variant="ghost" @click="close">Cancel</UButton>
-            <UButton type="submit" :loading="loading">{{ isEditing ? 'Update' : 'Create' }}</UButton>
+            <UButton variant="ghost" @click="close">Annuler</UButton>
+            <UButton type="submit" :loading="loading">{{ isEditing ? 'Mettre à jour' : 'Créer' }}</UButton>
           </div>
         </form>
       </template>

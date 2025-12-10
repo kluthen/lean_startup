@@ -15,7 +15,7 @@ const attributes = computed(() => {
 // State
 const mealConstraints = useState<any[]>('mealConstraints')
 const guests = ref([
-  { id: 1, name: 'Guest 1', constraints: [] as { attributeId: string, weight: string, stepValue: number }[] }
+  { id: 1, name: 'Invité 1', constraints: [] as { attributeId: string, weight: string, stepValue: number }[] }
 ])
 
 if (mealConstraints.value && mealConstraints.value.length) {
@@ -40,7 +40,7 @@ function getStepByWeight(weight: string) {
 function addGuest() {
   guests.value.push({
     id: guests.value.length + 1,
-    name: `Guest ${guests.value.length + 1}`,
+    name: `Invité ${guests.value.length + 1}`,
     constraints: []
   })
 }
@@ -114,7 +114,7 @@ async function generate() {
     <div class="space-y-8 max-w-4xl mx-auto">
       <UCard v-for="(guest, gIdx) in guests" :key="guest.id">
         <div class="flex justify-between items-center mb-4">
-          <UInput v-model="guest.name" class="font-bold text-lg" variant="none" placeholder="Guest Name" />
+          <UInput v-model="guest.name" class="font-bold text-lg" variant="none" placeholder="Nom de l'invité" />
           <UButton v-if="guests.length > 1" color="error" variant="ghost" icon="i-heroicons-trash" @click="guests.splice(gIdx, 1)" />
         </div>
 
@@ -124,7 +124,7 @@ async function generate() {
                 v-model="constraint.attributeId" 
                 :items="attributes"
                 valueKey="id"
-                placeholder="Select restriction..."
+                placeholder="Restriction..."
                 class="flex-1"
              />
              
@@ -153,7 +153,7 @@ async function generate() {
 
           <div class="pt-2">
             <UButton size="sm" variant="soft" icon="i-heroicons-plus" @click="addConstraint(gIdx)">
-              Add Constraint
+              Ajouter une restriction
             </UButton>
           </div>
         </div>
@@ -162,10 +162,10 @@ async function generate() {
       <!-- Actions -->
       <div class="flex justify-center flex-col items-center gap-4 mt-8">
         <UButton variant="outline" icon="i-heroicons-user-plus" @click="addGuest">
-          Add Another Guest
+          Ajouter un autre invité
         </UButton>
         <UButton size="xl" @click="generate" :loading="loading" class="px-12">
-          Generate Meal
+          Générer le menu
         </UButton>
       </div>
     </div>

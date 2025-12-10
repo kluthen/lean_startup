@@ -11,7 +11,7 @@ defineProps<{
   <div v-if="guests && guests.length" class="bg-white dark:bg-gray-800 p-6 rounded-xl h-fit border border-gray-100 dark:border-gray-700">
      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
         <UIcon name="i-heroicons-users" />
-        Guests Constraints
+        Contraintes des invités
      </h2>
      <div v-for="guest in guests" :key="guest.id" class="mb-6 last:mb-0">
          <h3 class="font-bold text-sm mb-2 text-primary-600 border-b border-gray-100 pb-1">{{ guest.name }}</h3>
@@ -25,11 +25,11 @@ defineProps<{
                     size="xs"
                     variant="soft"
                  >
-                    {{ c.weight === '--' || c.stepValue === 0 ? 'Forbidden' : c.weight === '-' || c.stepValue === 1 ? 'Avoid' : 'Prefer' }}
+                    {{ c.weight === '--' || c.stepValue === 0 ? 'Interdit' : c.weight === '-' || c.stepValue === 1 ? 'Eviter' : 'Préférer' }}
                  </UBadge>
              </li>
          </ul>
-         <div v-else class="text-xs text-gray-400 italic">No constraints</div>
+         <div v-else class="text-xs text-gray-400 italic">Aucune contrainte</div>
      </div>
   </div>
 </template>
