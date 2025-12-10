@@ -251,17 +251,11 @@ function confirmIngredientSwap(newIng: any) {
          </ul>
       </div>
     </div>
+  </UContainer>
+
     <!-- Swap Ingredient Modal -->
-    <UModal v-model="isSwapModalOpen">
-        <UCard>
-            <template #header>
-                <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-bold">Swap Ingredient</h3>
-                    <UButton icon="i-heroicons-x-mark" color="neutral" variant="ghost" @click="isSwapModalOpen = false" />
-                </div>
-                <div class="text-sm text-gray-500 mt-1">Replacing <span class="font-medium text-gray-900 dark:text-gray-100">{{ swappingIngredient?.name }}</span></div>
-            </template>
-            
+    <UModal v-model:open="isSwapModalOpen" :title="`Replacing ${swappingIngredient?.name}`">
+        <template #body>
             <div v-if="isLoadingAlternatives" class="flex justify-center p-8">
                 <UIcon name="i-heroicons-arrow-path" class="animate-spin text-3xl text-primary-500" />
             </div>
@@ -287,7 +281,6 @@ function confirmIngredientSwap(newIng: any) {
                     </div>
                 </UButton>
             </div>
-        </UCard>
+        </template>
     </UModal>
-  </UContainer>
 </template>

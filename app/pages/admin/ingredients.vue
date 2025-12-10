@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Ingredient } from '~/shared/types'
+import type { Ingredient } from '~~/shared/types'
 
 const { data: ingredients, refresh } = await useFetch<Ingredient[]>('/api/ingredients')
 const toast = useToast()
@@ -21,7 +21,7 @@ async function addIngredient() {
     isOpen.value = false
     refresh()
   } catch (error: any) {
-    toast.add({ title: 'Error', description: error.statusMessage || 'Failed to add ingredient', color: 'red' })
+    toast.add({ title: 'Error', description: error.statusMessage || 'Failed to add ingredient', color: 'error' })
   } finally {
     loading.value = false
   }
@@ -34,7 +34,7 @@ async function deleteIngredient(id: string) {
     toast.add({ title: 'Deleted', description: 'Ingredient removed' })
     refresh()
   } catch (error) {
-    toast.add({ title: 'Error', description: 'Failed', color: 'red' })
+    toast.add({ title: 'Error', description: 'Failed', color: 'error' })
   }
 }
 </script>
@@ -48,30 +48,26 @@ async function deleteIngredient(id: string) {
 
     <UCard>
       <UTable 
-        :rows="ingredients || []" 
+        :data="ingredients || []" 
         :columns="[
-            { key: 'name', label: 'Name', id: 'name' }, 
-            { key: 'actions', label: '', id: 'actions' }
+            { accessorKey: 'name', header: 'Name' }, 
+            { accessorKey: 'actions', header: '' }
         ]"
       >
-        <template #actions-data="{ row }">
+        <template #actions-cell="{ row }">
           <UButton 
-            color="red" 
+            color="error" 
             variant="ghost" 
             icon="i-heroicons-trash" 
             size="xs"
-            @click="deleteIngredient(row.id)"
+            @click="deleteIngredient(row.original.id)"
           />
         </template>
       </UTable>
     </UCard>
 
-    <UModal v-model="isOpen">
-      <UCard>
-        <template #header>
-          <h3 class="font-bold">New Ingredient</h3>
-        </template>
-        
+    <UModal v-model:open="isOpen" title="New Ingredient">
+      <template #body>
         <form @submit.prevent="addIngredient" class="space-y-4">
           <UFormField label="Name" required>
             <UInput v-model="newIngredientName" placeholder="e.g. Tomatoes" autofocus />
@@ -82,7 +78,7 @@ async function deleteIngredient(id: string) {
             <UButton type="submit" :loading="loading">Create</UButton>
           </div>
         </form>
-      </UCard>
+      </template>
     </UModal>
   </div>
 </template>

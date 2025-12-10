@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Recipe, Ingredient, PlateElement, FoodAttribute } from '~/shared/types'
+import type { Recipe, Ingredient, PlateElement, FoodAttribute } from '~~/shared/types'
 
 const { data: recipes, refresh: refreshRecipes } = await useFetch<Recipe[]>('/api/recipes')
 const { data: ingredients } = await useFetch<Ingredient[]>('/api/ingredients')
@@ -8,29 +8,30 @@ const { data: attributesRaw } = await useFetch<FoodAttribute[]>('/api/attributes
 
 const attributes = computed(() => {
   return attributesRaw.value?.map(attr => ({
-    ...attr,
-    label: `${attr.type}: ${attr.value}`
+    id: attr.id,
+    label: `${attr.type}: ${attr.value}`,
+    attr_type: attr.type,
+    attr_value: attr.value
   })) || []
 })
 
 const toast = useToast()
 const isOpen = ref(false)
 const loading = ref(false)
-
 // Form State
 const form = reactive({
   name: '',
   description: '',
-  plateElementIds: [] as string[],
-  attributeIds: [] as string[],
+  selectedPlateElements: [] as PlateElement[],
+  selectedAttributes: [] as any[],
   ingredients: [] as { ingredientId: string; quantity: number; unit: string; optional: boolean }[]
 })
 
 function resetForm() {
   form.name = ''
   form.description = ''
-  form.plateElementIds = []
-  form.attributeIds = []
+  form.selectedPlateElements = []
+  form.selectedAttributes = []
   form.ingredients = []
 }
 
@@ -48,14 +49,18 @@ async function createRecipe() {
   try {
     await $fetch('/api/recipes', {
       method: 'POST',
-      body: { ...form }
+      body: {
+        ...form,
+        plateElementIds: form.selectedPlateElements.map(e => e.id),
+        attributeIds: form.selectedAttributes.map(a => a.id),
+      }
     })
     toast.add({ title: 'Success', description: 'Recipe created' })
     resetForm()
     isOpen.value = false
     refreshRecipes()
   } catch (error: any) {
-    toast.add({ title: 'Error', description: error.statusMessage || 'Failed', color: 'red' })
+    toast.add({ title: 'Error', description: error.statusMessage || 'Failed', color: 'error' })
   } finally {
     loading.value = false
   }
@@ -82,22 +87,18 @@ async function deleteRecipe(id: string) {
             <h3 class="font-bold text-lg">{{ recipe.name }}</h3>
             <p class="text-sm text-gray-500 mb-2">{{ recipe.description }}</p>
             <div class="flex gap-2 flex-wrap">
-              <UBadge v-for="pe in (recipe as any).plateElements" :key="pe.id" color="gray" size="xs">
+              <UBadge v-for="pe in (recipe as any).plateElements" :key="pe.id" color="neutral" size="xs">
                 {{ pe.label }}
               </UBadge>
             </div>
           </div>
-          <UButton color="red" variant="ghost" icon="i-heroicons-trash" @click="deleteRecipe(recipe.id)" />
+          <UButton color="error" variant="ghost" icon="i-heroicons-trash" @click="deleteRecipe(recipe.id)" />
         </div>
       </UCard>
     </div>
 
-    <UModal v-model="isOpen" :ui="{ width: 'sm:max-w-3xl' }">
-      <UCard>
-        <template #header>
-          <h3 class="font-bold text-lg">New Recipe</h3>
-        </template>
-
+    <UModal v-model:open="isOpen" title="New Recipe" :ui="{ content: 'sm:max-w-3xl' }">
+      <template #body>
         <form @submit.prevent="createRecipe" class="space-y-6">
           <div class="grid md:grid-cols-2 gap-4">
             <UFormField label="Name" required>
@@ -105,10 +106,9 @@ async function deleteRecipe(id: string) {
             </UFormField>
             <UFormField label="Plate Category">
               <USelectMenu 
-                v-model="form.plateElementIds" 
+                v-model="form.selectedPlateElements" 
                 :items="plateElements || []" 
-                label-attribute="label"
-                value-attribute="id"
+                option-attribute="label"
                 multiple 
                 placeholder="Select category..."
               />
@@ -141,22 +141,21 @@ async function deleteRecipe(id: string) {
               <div class="pt-2">
                   <UCheckbox v-model="item.optional" label="Opt" />
               </div>
-              <UButton color="red" variant="ghost" icon="i-heroicons-x-mark" @click="removeIngredientRow(idx)" />
+              <UButton color="error" variant="ghost" icon="i-heroicons-x-mark" @click="removeIngredientRow(idx)" />
             </div>
           </div>
           
           <!-- Attributes Section (Tags) -->
            <UFormField label="Attributes / Tags">
               <USelectMenu 
-                v-model="form.attributeIds" 
+                v-model="form.selectedAttributes" 
                 :items="attributes || []" 
-                value-attribute="id"
                 multiple 
                 searchable
                 placeholder="Search attributes..."
               >
-                 <template #option="{ option }">
-                    <span class="truncate">{{ option.type }}: {{ option.value }}</span>
+                 <template #item="{ item }">
+                    <span class="truncate">{{ item.attr_type }}: {{ item.attr_value }}</span>
                  </template>
               </USelectMenu>
             </UFormField>
@@ -166,7 +165,7 @@ async function deleteRecipe(id: string) {
             <UButton type="submit" :loading="loading">Save Recipe</UButton>
           </div>
         </form>
-      </UCard>
+      </template>
     </UModal>
   </div>
 </template>
