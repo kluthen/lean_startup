@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { Recipe, FoodAttribute } from '~/shared/types'
+import type { FoodAttribute, Recipe } from '~~/shared/types';
+
 
 const { data: attributes } = await useFetch<FoodAttribute[]>('/api/attributes')
 
@@ -56,6 +57,61 @@ function swapItem(sectionId: keyof MealData, newItem: Recipe) {
         (mealState.value[sectionId] as MealSection).selected = newItem
     }
 }
+
+// Ingredient Swapping Logic
+const isSwapModalOpen = ref(false)
+const swappingIngredient = ref<any>(null)
+const swapAlternatives = ref<any[]>([])
+const isLoadingAlternatives = ref(false)
+const activeSectionId = ref<string | null>(null)
+
+async function openSwapModal(ing: any, sectionId: string) {
+    swappingIngredient.value = ing
+    activeSectionId.value = sectionId
+    swapAlternatives.value = []
+    isLoadingAlternatives.value = true
+    isSwapModalOpen.value = true
+
+    try {
+        const alternatives = await $fetch('/api/ingredients/alternatives', {
+            method: 'POST',
+            body: {
+                ingredientId: ing.ingredientId || ing.id, // Handle different shapes if necessary
+                constraints: guests.value.flatMap(g => g.constraints)
+            }
+        })
+        swapAlternatives.value = alternatives
+    } catch (e) {
+        console.error('Failed to fetch alternatives', e)
+        // Optionally show error toast
+    } finally {
+        isLoadingAlternatives.value = false
+    }
+}
+
+function confirmIngredientSwap(newIng: any) {
+    if (!mealState.value || !activeSectionId.value || !swappingIngredient.value) return
+
+    // Find the section and recipe
+    const section = mealState.value[activeSectionId.value as keyof MealData]
+    if (section && typeof section !== 'string' && section.selected) {
+        const recipe = section.selected as any
+        // Find ingredient index
+        const idx = recipe.ingredients.findIndex((i: any) => i.ingredientId === swappingIngredient.value.ingredientId)
+        if (idx !== -1) {
+            // Update the ingredient in place
+            // We keep quantity/unit but change name and id
+            recipe.ingredients[idx] = {
+                ...recipe.ingredients[idx],
+                ingredientId: newIng.id,
+                name: newIng.name,
+                ingredient: { ...newIng } // Update nested object if used for display
+            }
+            // Trigger reactivity? Vue 3 deep reactivity should handle this if state is proper
+        }
+    }
+    isSwapModalOpen.value = false
+}
 </script>
 
 <template>
@@ -65,7 +121,7 @@ function swapItem(sectionId: keyof MealData, newItem: Recipe) {
     </div>
     
     <div v-if="mealState?.warning" class="mb-6">
-        <UAlert title="Warning" :description="mealState.warning" color="orange" variant="subtle" icon="i-heroicons-exclamation-triangle" />
+        <UAlert title="Warning" :description="mealState.warning" color="warning" variant="subtle" icon="i-heroicons-exclamation-triangle" />
     </div>
 
     <div class="grid lg:grid-cols-3 gap-10">
@@ -83,7 +139,7 @@ function swapItem(sectionId: keyof MealData, newItem: Recipe) {
                          {{ attributes?.find(a => a.id === c.attributeId)?.value || c.attributeId.substring(0,8) + '...' }}
                      </span>
                      <UBadge 
-                        :color="c.weight === '--' || c.stepValue === 0 ? 'red' : c.weight === '-' || c.stepValue === 1 ? 'orange' : 'green'" 
+                        :color="c.weight === '--' || c.stepValue === 0 ? 'error' : c.weight === '-' || c.stepValue === 1 ? 'warning' : 'success'" 
                         size="xs"
                         variant="soft"
                      >
@@ -109,7 +165,7 @@ function swapItem(sectionId: keyof MealData, newItem: Recipe) {
                     <!-- Swap Control -->
                     <USelectMenu 
                         v-if="sec.data?.alternatives && sec.data.alternatives.length > 1"
-                        :model-value="sec.data.selected"
+                        :model-value="sec.data.selected ?? undefined"
                         @update:model-value="(val) => swapItem(sec.id as any, val)"
                         :items="sec.data.alternatives"
                         option-attribute="name"
@@ -125,7 +181,7 @@ function swapItem(sectionId: keyof MealData, newItem: Recipe) {
                         <h3 class="text-xl font-bold">{{ sec.data.selected.name }}</h3>
                         <p class="text-gray-600 dark:text-gray-400">{{ sec.data.selected.description }}</p>
                      </div>
-                     <UBadge v-if="(sec.data.selected as any).score" color="gray" variant="soft">Score: {{ (sec.data.selected as any).score }}</UBadge>
+                     <UBadge v-if="(sec.data.selected as any).score" color="neutral" variant="soft">Score: {{ (sec.data.selected as any).score }}</UBadge>
                  </div>
                  
                  <!-- Expandable Details -->
@@ -133,10 +189,23 @@ function swapItem(sectionId: keyof MealData, newItem: Recipe) {
                     <template #details>
                         <div class="p-2 space-y-2">
                             <h4 class="font-bold text-sm">Ingredients:</h4>
-                            <ul class="list-disc list-inside text-sm text-gray-700 dark:text-gray-300">
-                                <li v-for="ing in (sec.data.selected as any).ingredients" :key="ing.ingredientId">
-                                    {{ ing.quantity }} {{ ing.unit }} {{ ing.name || ing.ingredient?.name }}
-                                    <span v-if="ing.optional" class="text-xs text-gray-500">(Optional)</span>
+                            <ul class="space-y-1 mt-2">
+                                <li v-for="ing in (sec.data.selected as any).ingredients" :key="ing.ingredientId" class="flex items-center gap-2 group text-sm text-gray-700 dark:text-gray-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                                    <span>
+                                        {{ ing.quantity }} {{ ing.unit }} {{ ing.name || ing.ingredient?.name }}
+                                        <span v-if="ing.optional" class="text-xs text-gray-500">(Optional)</span>
+                                    </span>
+                                    
+                                    <UButton 
+                                        icon="i-heroicons-arrow-path" 
+                                        size="xs" 
+                                        color="neutral" 
+                                        variant="ghost" 
+                                        class="opacity-0 group-hover:opacity-100 transition-opacity"
+                                        @click="openSwapModal(ing, sec.id)"
+                                        title="Swap ingredient"
+                                    />
                                 </li>
                             </ul>
                             
@@ -182,5 +251,43 @@ function swapItem(sectionId: keyof MealData, newItem: Recipe) {
          </ul>
       </div>
     </div>
+    <!-- Swap Ingredient Modal -->
+    <UModal v-model="isSwapModalOpen">
+        <UCard>
+            <template #header>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold">Swap Ingredient</h3>
+                    <UButton icon="i-heroicons-x-mark" color="neutral" variant="ghost" @click="isSwapModalOpen = false" />
+                </div>
+                <div class="text-sm text-gray-500 mt-1">Replacing <span class="font-medium text-gray-900 dark:text-gray-100">{{ swappingIngredient?.name }}</span></div>
+            </template>
+            
+            <div v-if="isLoadingAlternatives" class="flex justify-center p-8">
+                <UIcon name="i-heroicons-arrow-path" class="animate-spin text-3xl text-primary-500" />
+            </div>
+            <div v-else-if="swapAlternatives.length === 0" class="text-center p-8 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <UIcon name="i-heroicons-face-frown" class="text-4xl mb-2 text-gray-400" />
+                <p>No compatible alternatives found matching the current guest constraints.</p>
+            </div>
+            <div v-else class="space-y-2 max-h-60 overflow-y-auto p-1">
+                <UButton
+                    v-for="alt in swapAlternatives"
+                    :key="alt.id"
+                    block
+                    variant="soft"
+                    color="neutral"
+                    class="justify-start group"
+                    @click="confirmIngredientSwap(alt)"
+                >
+                    <div class="text-left w-full">
+                        <div class="font-medium group-hover:text-primary-600 transition-colors">{{ alt.name }}</div>
+                        <div v-if="alt.attributes?.length" class="flex gap-1 mt-1">
+                             <UBadge v-for="attr in alt.attributes" :key="attr.id" size="xs" variant="subtle" color="neutral">{{ attr.value }}</UBadge>
+                        </div>
+                    </div>
+                </UButton>
+            </div>
+        </UCard>
+    </UModal>
   </UContainer>
 </template>
