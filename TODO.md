@@ -35,6 +35,7 @@
 * [ ] See how to run everything in prod (as opposed to using npm run dev) 
 * [ ] Use coolify to deploy the app
 * [ ] ensure the whole app is in french (some elements are in english, and even ill named even in english.)
+* [ ] Componentify the app (meal.vue is a mess)
 
 ## v0.0.6 User Profile management
 
