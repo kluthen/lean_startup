@@ -11,9 +11,7 @@ services:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
     ports:
       - "8088:3000"
-    cmd:
-      - npm run build
-      - npm run start
+    command: ["./buildnrun.sh"]
 
   db:
     image: postgres:17
