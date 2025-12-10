@@ -24,8 +24,10 @@ const form = reactive({
   description: '',
   selectedPlateElements: [] as PlateElement[],
   selectedAttributes: [] as any[],
-  ingredients: [] as { ingredientId: string; quantity: number; unit: string; optional: boolean }[]
+  ingredients: [] as { ingredientId: string; quantity: number; unit: string; optional: boolean; preparation?: string }[]
 })
+const isEditing = ref(false)
+const editingId = ref<string | null>(null)
 
 function resetForm() {
   form.name = ''
@@ -33,10 +35,44 @@ function resetForm() {
   form.selectedPlateElements = []
   form.selectedAttributes = []
   form.ingredients = []
+  isEditing.value = false
+  editingId.value = null
+}
+
+function editRecipe(recipe: Recipe) {
+  resetForm()
+  isEditing.value = true
+  editingId.value = recipe.id
+  form.name = recipe.name
+  form.description = recipe.description || ''
+  
+  if ((recipe as any).plateElements) {
+     form.selectedPlateElements = (recipe as any).plateElements.map((pe: any) => 
+        plateElements.value?.find(p => p.id === pe.id) || pe
+     )
+  }
+  
+  if (recipe.attributes) {
+     form.selectedAttributes = recipe.attributes.map((attr: any) => 
+        attributes.value?.find(a => a.id === attr.id) || attr
+     )
+  }
+
+  if (recipe.ingredients) {
+    form.ingredients = recipe.ingredients.map(ri => ({
+      ingredientId: ri.ingredientId,
+      quantity: ri.quantity || 0,
+      unit: ri.unit || '',
+      optional: ri.optional,
+      preparation: ri.preparation || ''
+    }))
+  }
+  
+  isOpen.value = true
 }
 
 function addIngredientRow() {
-  form.ingredients.push({ ingredientId: '', quantity: 0, unit: '', optional: false })
+  form.ingredients.push({ ingredientId: '', quantity: 0, unit: '', optional: false, preparation: '' })
 }
 
 function removeIngredientRow(index: number) {
@@ -47,15 +83,26 @@ async function createRecipe() {
   if (!form.name) return
   loading.value = true
   try {
-    await $fetch('/api/recipes', {
-      method: 'POST',
-      body: {
-        ...form,
-        plateElementIds: form.selectedPlateElements.map(e => e.id),
-        attributeIds: form.selectedAttributes.map(a => a.id),
-      }
-    })
-    toast.add({ title: 'Success', description: 'Recipe created' })
+    const payload = {
+      ...form,
+      plateElementIds: form.selectedPlateElements.map(e => e.id),
+      attributeIds: form.selectedAttributes.map(a => a.id),
+    }
+
+    if (isEditing.value && editingId.value) {
+       await $fetch(`/api/recipes/${editingId.value}`, {
+         method: 'PUT',
+         body: payload
+       })
+       toast.add({ title: 'Success', description: 'Recipe updated' })
+    } else {
+       await $fetch('/api/recipes', {
+         method: 'POST',
+         body: payload
+       })
+       toast.add({ title: 'Success', description: 'Recipe created' })
+    }
+
     resetForm()
     isOpen.value = false
     refreshRecipes()
@@ -92,12 +139,15 @@ async function deleteRecipe(id: string) {
               </UBadge>
             </div>
           </div>
-          <UButton color="error" variant="ghost" icon="i-heroicons-trash" @click="deleteRecipe(recipe.id)" />
+          <div class="flex gap-2">
+            <UButton color="primary" variant="ghost" icon="i-heroicons-pencil" @click="editRecipe(recipe)" />
+            <UButton color="error" variant="ghost" icon="i-heroicons-trash" @click="deleteRecipe(recipe.id)" />
+          </div>
         </div>
       </UCard>
     </div>
-
-    <UModal v-model:open="isOpen" title="New Recipe" :ui="{ content: 'sm:max-w-3xl' }">
+ 
+    <UModal v-model:open="isOpen" :title="isEditing ? 'Edit Recipe' : 'New Recipe'" :ui="{ content: 'sm:max-w-3xl' }">
       <template #body>
         <form @submit.prevent="createRecipe" class="space-y-6">
           <div class="grid md:grid-cols-2 gap-4">
@@ -138,6 +188,7 @@ async function deleteRecipe(id: string) {
               />
               <UInput v-model.number="item.quantity" type="number" placeholder="Qty" class="w-20" />
               <UInput v-model="item.unit" placeholder="Unit" class="w-24" />
+              <UInput v-model="item.preparation" placeholder="Prep note" class="flex-1" />
               <div class="pt-2">
                   <UCheckbox v-model="item.optional" label="Opt" />
               </div>
@@ -162,7 +213,7 @@ async function deleteRecipe(id: string) {
 
           <div class="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
             <UButton variant="ghost" @click="isOpen = false">Cancel</UButton>
-            <UButton type="submit" :loading="loading">Save Recipe</UButton>
+            <UButton type="submit" :loading="loading">{{ isEditing ? 'Update' : 'Create' }}</UButton>
           </div>
         </form>
       </template>

@@ -1,24 +1,31 @@
 <script setup lang="ts">
-import type { FoodAttribute } from '~/shared/types'
+import type { FoodAttribute } from '~~/shared/types'
 
 const { data: attributesRaw } = await useFetch<FoodAttribute[]>('/api/attributes')
 
 const attributes = computed(() => {
   return attributesRaw.value?.map(attr => ({
-    ...attr,
-    label: `${attr.type}: ${attr.value}`
+    id: attr.id,
+    label: `${attr.type}: ${attr.value}`,
+    attr_value: attr.value,
+    attr_type: attr.type
   })) || []
 })
 
 // State
+const mealConstraints = useState<any[]>('mealConstraints')
 const guests = ref([
   { id: 1, name: 'Guest 1', constraints: [] as { attributeId: string, weight: string, stepValue: number }[] }
 ])
 
-const weights = [
-  { label: 'Forbidden', value: '--', step: 0, color: 'red' },
-  { label: 'Avoid', value: '-', step: 1, color: 'orange' },
-  { label: 'Preferred', value: '+', step: 2, color: 'green' },
+if (mealConstraints.value && mealConstraints.value.length) {
+  guests.value = JSON.parse(JSON.stringify(mealConstraints.value))
+}
+
+const weights: { label: string; value: string; step: number; color: 'error' | 'warning' | 'success' | 'primary' }[] = [
+  { label: 'Forbidden', value: '--', step: 0, color: 'error' },
+  { label: 'Avoid', value: '-', step: 1, color: 'warning' },
+  { label: 'Preferred', value: '+', step: 2, color: 'success' },
   { label: 'Mandatory', value: '++', step: 3, color: 'primary' },
 ]
 
@@ -39,11 +46,11 @@ function addGuest() {
 }
 
 function addConstraint(guestIndex: number) {
-  guests.value[guestIndex].constraints.push({ attributeId: '', weight: '--', stepValue: 0 })
+  guests.value[guestIndex]?.constraints.push({ attributeId: '', weight: '--', stepValue: 0 })
 }
 
 function removeConstraint(guestIndex: number, cIndex: number) {
-  guests.value[guestIndex].constraints.splice(cIndex, 1)
+  guests.value[guestIndex]?.constraints.splice(cIndex, 1)
 }
 
 // Generation
@@ -60,7 +67,7 @@ async function generate() {
        return {
           guestId: g.name,
           attributeId: attrId,
-          weight: getWeightByStep(c.stepValue).value
+          weight: getWeightByStep(c?.stepValue)?.value || '--'
        }
     })
   ).filter(c => c.attributeId) // Ensure ID is set
@@ -80,7 +87,7 @@ async function generate() {
         constraints: g.constraints.map(c => ({
             ...c,
             attributeId: typeof c.attributeId === 'object' ? (c.attributeId as any).id : c.attributeId,
-            weight: getWeightByStep(c.stepValue).value 
+            weight: getWeightByStep(c?.stepValue)?.value || '--' 
         }))
     }))
     
@@ -108,7 +115,7 @@ async function generate() {
       <UCard v-for="(guest, gIdx) in guests" :key="guest.id">
         <div class="flex justify-between items-center mb-4">
           <UInput v-model="guest.name" class="font-bold text-lg" variant="none" placeholder="Guest Name" />
-          <UButton v-if="guests.length > 1" color="red" variant="ghost" icon="i-heroicons-trash" @click="guests.splice(gIdx, 1)" />
+          <UButton v-if="guests.length > 1" color="error" variant="ghost" icon="i-heroicons-trash" @click="guests.splice(gIdx, 1)" />
         </div>
 
         <div class="space-y-3">
@@ -116,7 +123,7 @@ async function generate() {
              <USelectMenu 
                 v-model="constraint.attributeId" 
                 :items="attributes"
-                value-attribute="id"
+                valueKey="id"
                 placeholder="Select restriction..."
                 class="flex-1"
              />
@@ -128,7 +135,7 @@ async function generate() {
                     :min="0" 
                     :max="3" 
                     :step="1"
-                    :color="getWeightByStep(constraint.stepValue).color"
+                    :color="getWeightByStep(constraint.stepValue)?.color"
                  />
                  <div class="flex justify-between text-[10px] uppercase font-bold text-gray-500">
                     <span :class="{'text-red-500': constraint.stepValue === 0}">--</span>
@@ -136,12 +143,12 @@ async function generate() {
                     <span :class="{'text-green-500': constraint.stepValue === 2}">+</span>
                     <span :class="{'text-primary-500': constraint.stepValue === 3}">++</span>
                  </div>
-                 <div class="text-xs text-center font-medium" :class="`text-${getWeightByStep(constraint.stepValue).color}-500`">
-                    {{ getWeightByStep(constraint.stepValue).label }}
+                 <div class="text-xs text-center font-medium" :class="`text-${getWeightByStep(constraint.stepValue)?.color}-500`">
+                    {{ getWeightByStep(constraint.stepValue)?.label }}
                  </div>
              </div>
              
-             <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark" @click="removeConstraint(gIdx, cIdx)" />
+             <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark" @click="removeConstraint(gIdx, cIdx)" />
           </div>
 
           <div class="pt-2">

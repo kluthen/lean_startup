@@ -7,21 +7,34 @@ const toast = useToast()
 const isOpen = ref(false)
 const newIngredientName = ref('')
 const loading = ref(false)
+const isEditing = ref(false)
+const editingId = ref<string | null>(null)
 
 async function addIngredient() {
   if (!newIngredientName.value) return
   loading.value = true
   try {
-    await $fetch('/api/ingredients', {
-      method: 'POST',
-      body: { name: newIngredientName.value }
-    })
-    toast.add({ title: 'Success', description: 'Ingredient added' })
+    if (isEditing.value && editingId.value) {
+      await $fetch(`/api/ingredients/${editingId.value}`, {
+        method: 'PUT',
+        body: { name: newIngredientName.value }
+      })
+      toast.add({ title: 'Success', description: 'Ingredient updated' })
+    } else {
+      await $fetch('/api/ingredients', {
+        method: 'POST',
+        body: { name: newIngredientName.value }
+      })
+      toast.add({ title: 'Success', description: 'Ingredient added' })
+    }
+    
     newIngredientName.value = ''
     isOpen.value = false
+    isEditing.value = false
+    editingId.value = null
     refresh()
   } catch (error: any) {
-    toast.add({ title: 'Error', description: error.statusMessage || 'Failed to add ingredient', color: 'error' })
+    toast.add({ title: 'Error', description: error.statusMessage || 'Failed to save', color: 'error' })
   } finally {
     loading.value = false
   }
@@ -37,13 +50,27 @@ async function deleteIngredient(id: string) {
     toast.add({ title: 'Error', description: 'Failed', color: 'error' })
   }
 }
+
+function openEdit(ingredient: Ingredient) {
+  newIngredientName.value = ingredient.name
+  editingId.value = ingredient.id
+  isEditing.value = true
+  isOpen.value = true
+}
+
+function close() {
+  isOpen.value = false
+  isEditing.value = false
+  editingId.value = null
+  newIngredientName.value = ''
+}
 </script>
 
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-xl font-semibold">Ingredients List</h2>
-      <UButton icon="i-heroicons-plus" @click="isOpen = true">Add Ingredient</UButton>
+      <UButton icon="i-heroicons-plus" @click="isOpen = true; isEditing = false; newIngredientName = ''">Add Ingredient</UButton>
     </div>
 
     <UCard>
@@ -55,18 +82,27 @@ async function deleteIngredient(id: string) {
         ]"
       >
         <template #actions-cell="{ row }">
-          <UButton 
-            color="error" 
-            variant="ghost" 
-            icon="i-heroicons-trash" 
-            size="xs"
-            @click="deleteIngredient(row.original.id)"
-          />
+          <div class="flex gap-1 justify-end">
+             <UButton 
+                color="primary" 
+                variant="ghost" 
+                icon="i-heroicons-pencil" 
+                size="xs"
+                @click="openEdit(row.original)"
+             />
+             <UButton 
+                color="error" 
+                variant="ghost" 
+                icon="i-heroicons-trash" 
+                size="xs"
+                @click="deleteIngredient(row.original.id)"
+             />
+          </div>
         </template>
       </UTable>
     </UCard>
 
-    <UModal v-model:open="isOpen" title="New Ingredient">
+    <UModal v-model:open="isOpen" :title="isEditing ? 'Edit Ingredient' : 'New Ingredient'">
       <template #body>
         <form @submit.prevent="addIngredient" class="space-y-4">
           <UFormField label="Name" required>
@@ -74,8 +110,8 @@ async function deleteIngredient(id: string) {
           </UFormField>
           
           <div class="flex justify-end gap-2">
-            <UButton variant="ghost" @click="isOpen = false">Cancel</UButton>
-            <UButton type="submit" :loading="loading">Create</UButton>
+            <UButton variant="ghost" @click="close">Cancel</UButton>
+            <UButton type="submit" :loading="loading">{{ isEditing ? 'Update' : 'Create' }}</UButton>
           </div>
         </form>
       </template>

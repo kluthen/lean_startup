@@ -15,11 +15,8 @@
 
 ### Important
 
-* [ ] pages/admin.vue: sometimes, the page while correctly displayed, isn't filled with appropriate date (no recipes, no ingredients). I need to reload the page (ctrl+r) for them to appear.
-* [ ] pages/recipes.vue: when creating a new recipe: clicking on any components triggers the poping up of a modal with nothing in it.
-* [ ] pages/recipes.vue: there is no preparation field on the recipe ingredient. 
-    * [ ] might be good to move the preparation from ingredient toward a true table affixed to the recipe (so that a recipe may have multiple preparation steps)
-    * [ ] preparation steps must contains: link to ingredient(s), a text, a duration (in minutes).
+* [x] pages/admin.vue: sometimes, the page while correctly displayed, isn't filled with appropriate date (no recipes, no ingredients). I need to reload the page (ctrl+r) for them to appear.
+* [x] pages/recipes.vue: when creating a new recipe: clicking on any components triggers the poping up of a modal with nothing in it.
 * [ ] pages/recipes.vue: recipes aren't editable. 
 * [ ] pages/ingredients.vue: expects ingredients not to be editable as well...
 * [ ] pages/index.vue: allow to rename guests
