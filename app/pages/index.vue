@@ -1,7 +1,19 @@
 <script setup lang="ts">
 import type { FoodAttribute } from '~~/shared/types'
+const { user } = useAuth()
+
+interface Profile {
+    id: string;
+    user_id: string;
+    name: string;
+    type: string;
+    constraints: any;
+}
 
 const { data: attributesRaw } = await useFetch<FoodAttribute[]>('/api/attributes')
+const { data: userProfiles } = await useFetch<Profile[]>('/api/profile', {
+    immediate: !!user.value
+})
 
 const attributes = computed(() => {
   return attributesRaw.value?.map(attr => ({
@@ -12,16 +24,7 @@ const attributes = computed(() => {
   })) || []
 })
 
-// State
-const mealConstraints = useState<any[]>('mealConstraints')
-const guests = ref([
-  { id: 1, name: 'Invité 1', constraints: [] as { attributeId: string, weight: string, stepValue: number }[] }
-])
-
-if (mealConstraints.value && mealConstraints.value.length) {
-  guests.value = JSON.parse(JSON.stringify(mealConstraints.value))
-}
-
+// Helper functions & Constants
 const weights: { label: string; value: string; step: number; color: 'error' | 'warning' | 'success' | 'primary' }[] = [
   { label: 'Interdit', value: '--', step: 0, color: 'error' },
   { label: 'Eviter', value: '-', step: 1, color: 'warning' },
@@ -37,12 +40,76 @@ function getStepByWeight(weight: string) {
     return weights.find(w => w.value === weight)?.step || 0
 }
 
+interface Constraint {
+    attributeId: string;
+    weight: string;
+    stepValue: number;
+}
+
+interface Guest {
+    id: string;
+    name: string;
+    constraints: Constraint[];
+    isProfile?: boolean;
+}
+
+function mapProfileToGuest(profile: Profile): Guest {
+    const constraints: Constraint[] = []
+    if (profile.constraints) {
+        for (const [key, val] of Object.entries(profile.constraints)) {
+             if (typeof val === 'number') {
+                 constraints.push({
+                     attributeId: key,
+                     stepValue: val,
+                     weight: getWeightByStep(val)?.value || '--'
+                 })
+             }
+        }
+    }
+    
+    return {
+        id: profile.id, 
+        name: profile.name,
+        constraints,
+        isProfile: true
+    }
+}
+
+// State
+const mealConstraints = useState<any[]>('mealConstraints')
+const guests = ref<Guest[]>([
+  { id: '1', name: 'Invité 1', constraints: [] }
+])
+
+// Load profiles if user is logged in
+watchEffect(() => {
+    if (user.value && userProfiles.value) {
+        const me = userProfiles.value.find(p => p.type === 'me')
+        
+        // If we only have the default initial guest and it's empty, replace with 'me'
+        if (guests.value.length === 1 && guests.value[0].name === 'Invité 1' && guests.value[0].constraints.length === 0 && !guests.value[0].isProfile) {
+             if (me) {
+                 guests.value = [mapProfileToGuest(me)]
+             }
+        }
+    }
+})
+
 function addGuest() {
   guests.value.push({
-    id: guests.value.length + 1,
+    id: `guest-${Date.now()}`,
     name: `Invité ${guests.value.length + 1}`,
     constraints: []
   })
+}
+
+// Add Profile to guests
+function addProfileToGuests(profileId: string) {
+    const profile = userProfiles.value?.find(p => p.id === profileId)
+    if (profile) {
+        if (guests.value.find(g => g.id === profile.id)) return
+        guests.value.push(mapProfileToGuest(profile))
+    }
 }
 
 function addConstraint(guestIndex: number) {
@@ -63,6 +130,9 @@ async function generate() {
   // Flatten constraints
   const flatConstraints = guests.value.flatMap(g => 
     g.constraints.map(c => {
+       // Handle cases where USelectMenu might return an object instead of value if not configured correctly, 
+       // but here we typings say string. We'll trust v-model but keep safety if needed.
+       // Actually USelectMenu with value-attribute should return the value.
        const attrId = typeof c.attributeId === 'object' ? (c.attributeId as any).id : c.attributeId
        return {
           guestId: g.name,
@@ -73,11 +143,6 @@ async function generate() {
   ).filter(c => c.attributeId) // Ensure ID is set
 
   try {
-    // We can pass data via state or query. For simplicity, let's use a store or just pass to next page via state
-    // For this MVP, let's fetch here and show results locally or navigate.
-    // Navigation is cleaner.
-    
-    // Store in localStorage or useNuxtState to pass to /meal
     const mealState = useState('mealData')
     const constraintsState = useState('mealConstraints')
     
@@ -106,15 +171,39 @@ async function generate() {
     loading.value = false
   }
 }
+
+// Filter out profiles already in guests
+const availableProfiles = computed(() => {
+    if (!userProfiles.value) return []
+    return userProfiles.value.filter(p => !guests.value.find(g => g.id === p.id))
+})
 </script>
 
 <template>
   <UContainer class="py-10">
+    <!-- Authenticated User Profile Selector -->
+    <div v-if="user && availableProfiles.length > 0" class="mb-8">
+        <div class="flex gap-2 flex-wrap">
+            <UButton 
+                v-for="profile in availableProfiles" 
+                :key="profile.id"
+                variant="soft"
+                icon="i-heroicons-plus"
+                @click="addProfileToGuests(profile.id)"
+            >
+                Add {{ profile.name }}
+            </UButton>
+        </div>
+    </div>
+
     <!-- Guest Forms -->
     <div class="space-y-8 max-w-4xl mx-auto">
       <UCard v-for="(guest, gIdx) in guests" :key="guest.id">
         <div class="flex justify-between items-center mb-4">
-          <UInput v-model="guest.name" class="font-bold text-lg" variant="none" placeholder="Nom de l'invité" />
+          <div class="flex items-center gap-2">
+              <UAvatar v-if="guest.isProfile" :alt="guest.name" size="sm" />
+              <UInput v-model="guest.name" class="font-bold text-lg" variant="none" placeholder="Nom de l'invité" :disabled="!!guest.isProfile" />
+          </div>
           <UButton v-if="guests.length > 1" color="error" variant="ghost" icon="i-heroicons-trash" @click="guests.splice(gIdx, 1)" />
         </div>
 

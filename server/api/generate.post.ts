@@ -8,6 +8,18 @@ export default defineEventHandler(async (event) => {
         return { error: "No constraints provided" }
     }
 
+    const start = performance.now()
+
     const meal = await generateMeal(constraints)
-    return meal
+
+    const duration = performance.now() - start
+    console.log(`[MealGeneration] Took ${duration.toFixed(2)}ms`)
+    setHeader(event, 'Server-Timing', `generate;dur=${duration}`)
+
+    return {
+        ...meal,
+        _debug: {
+            durationMs: duration
+        }
+    }
 })
