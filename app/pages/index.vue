@@ -289,8 +289,8 @@ const availableProfiles = computed(() => {
 
 
     <!-- Active Symptoms Section -->
-    <div v-if="user" class="mb-8 ">
-        <UCard class="bg-gray-50 border-dashed border-2 mt-4">
+    <div v-if="user" class="mb-8 max-w-4xl mx-auto">
+        <UCard class="mt-4">
             <template #header>
                 <div class="flex justify-between items-center">
                     <h3 class="text-lg font-semibold text-gray-700">Symptômes en cours</h3>

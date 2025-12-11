@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import { h, resolveComponent } from 'vue'
+import { getPaginationRowModel } from '@tanstack/vue-table'
+
+const UBadge = resolveComponent('UBadge')
+const table = useTemplateRef('table')
 
 
 interface Symptom {
@@ -48,7 +53,7 @@ const colors = [
 
 const fetchSymptoms = async () => {
     try {
-        symptoms.value = await $fetch('/api/symptoms')
+        symptoms.value = await $fetch<Symptom[]>('/api/symptoms')
     } catch (e) {
         console.error(e)
     }
@@ -56,11 +61,15 @@ const fetchSymptoms = async () => {
 
 const fetchDefinitions = async () => {
      try {
-        definitions.value = await $fetch('/api/symptoms/definitions')
+        definitions.value = await $fetch<{ name: string; color: string }[]>('/api/symptoms/definitions')
+        console.log('[Frontend] Definitions fetched:', definitions.value)
     } catch (e) {
         console.error(e)
     }
 }
+
+const symptomOptions = computed(() => definitions.value.map(d => d.name))
+
 
 onMounted(() => {
     fetchSymptoms()
@@ -127,6 +136,49 @@ function formatDate(d: string) {
     if(!d) return ''
     return new Date(d).toLocaleString()
 }
+// Table configuration
+const historySymptoms = computed(() => symptoms.value.filter(x => x.end_date))
+
+const pagination = ref({
+  pageIndex: 0,
+  pageSize: 5
+})
+
+const globalFilter = ref('')
+
+// Table configuration
+
+
+const columns = [
+  {
+    accessorKey: 'name',
+    header: 'Nom',
+    cell: ({ row }: any) => {
+      const color = row.original.color
+      const name = row.getValue('name')
+      return h(UBadge as any, { color: color, variant: 'subtle' }, () => name)
+    }
+  },
+  {
+    accessorKey: 'begin_date',
+    header: 'Début',
+    cell: ({ row }: any) => formatDate(row.getValue('begin_date'))
+  },
+  {
+    accessorKey: 'end_date',
+    header: 'Fin',
+    cell: ({ row }: any) => formatDate(row.getValue('end_date'))
+  },
+  {
+    accessorKey: 'severity',
+    header: 'Sévérité',
+    cell: ({ row }: any) => {
+      const color = row.original.color
+      const severity = row.getValue('severity')
+      return h(UBadge as any, { color: color, variant: 'subtle' }, () => `${severity}/10`)
+    }
+  }
+]
 </script>
 
 <template>
@@ -157,16 +209,30 @@ function formatDate(d: string) {
             </div>
 
             <h2 class="text-lg font-semibold mt-8">Historique</h2>
-             <UTable :rows="symptoms.filter(x => x.end_date)" :columns="[{ key: 'name', label: 'Nom' }, { key: 'begin_date', label: 'Début' }, { key: 'end_date', label: 'Fin' }, { key: 'severity', label: 'Sévérité' }]">
-                <template #begin_date-data="{ row }">{{ formatDate(row.begin_date) }}</template>
-                <template #end_date-data="{ row }">{{ formatDate(row.end_date) }}</template>
-                <template #severity-data="{ row }">
-                     <UBadge :color="(row.color as any)">{{ row.severity }}/10</UBadge>
-                </template>
-             </UTable>
+             <div class="flex px-3 py-3.5 border-b border-gray-200 dark:border-gray-700 gap-4 justify-between items-center">
+                <UInput v-model="globalFilter" placeholder="Rechercher..." icon="i-heroicons-magnifying-glass-20-solid" />
+             </div>
+             <UTable 
+                ref="table"
+                v-model:pagination="pagination"
+                v-model:global-filter="globalFilter"
+                :data="historySymptoms" 
+                :columns="columns"
+                :pagination-options="{
+                    getPaginationRowModel: getPaginationRowModel()
+                }"
+             />
+             <div class="flex justify-end border-t border-gray-200 dark:border-gray-700 pt-4 px-4">
+                <UPagination
+                    :page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
+                    :items-per-page="table?.tableApi?.getState().pagination.pageSize"
+                    :total="table?.tableApi?.getFilteredRowModel().rows.length"
+                    @update:page="(p) => table?.tableApi?.setPageIndex(p - 1)"
+                />
+            </div>
         </div>
 
-        <UModal v-model="isModalOpen">
+        <UModal v-model:open="isModalOpen">
             <template #content>
                 <UCard>
                     <template #header>
@@ -174,16 +240,16 @@ function formatDate(d: string) {
                     </template>
 
                     <div class="space-y-4">
-                        <UFormGroup label="Nom">
+                        <UFormField label="Nom">
                             <UInputMenu
                                 v-model="editingSymptom.name"
-                                :options="definitions.map(d => d.name)"
+                                :options="symptomOptions"
                                 creatable
                                 @change="onNameChange"
                             />
-                        </UFormGroup>
+                        </UFormField>
 
-                        <UFormGroup label="Sévérité">
+                        <UFormField label="Sévérité">
                             <div class="flex items-center gap-4">
                                 <USlider 
                                     v-model="editingSymptom.severity" 
@@ -193,9 +259,9 @@ function formatDate(d: string) {
                                 />
                                 <div class="text-[10px] text-center font-bold" :class="`text-${editingSymptom.color}-500`">{{ editingSymptom.severity }}</div>
                             </div>
-                        </UFormGroup>
+                        </UFormField>
 
-                        <UFormGroup label="Couleur">
+                        <UFormField label="Couleur">
                             <div class="flex flex-wrap gap-2">
                                 <div 
                                     v-for="c in colors" 
@@ -206,11 +272,11 @@ function formatDate(d: string) {
                                     @click="editingSymptom.color = c.value"
                                 />
                             </div>
-                        </UFormGroup>
+                        </UFormField>
 
-                        <UFormGroup label="Commentaires">
+                        <UFormField label="Commentaires">
                             <UTextarea v-model="editingSymptom.comments" />
-                        </UFormGroup>
+                        </UFormField>
                     </div>
 
                     <template #footer>
