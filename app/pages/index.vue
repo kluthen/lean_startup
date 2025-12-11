@@ -15,6 +15,33 @@ const { data: userProfiles } = await useFetch<Profile[]>('/api/profile', {
     immediate: !!user.value
 })
 
+// Symptoms
+const { data: symptoms, refresh: refreshSymptoms } = await useFetch<any[]>('/api/symptoms', {
+    immediate: !!user.value,
+    transform: (data) => data.filter(d => !d.end_date) // Only active
+})
+
+const quickSymptom = ref({ name: '', severity: 5 })
+const addingSymptom = ref(false)
+
+async function addQuickSymptom() {
+    if (!quickSymptom.value.name) return
+    addingSymptom.value = true
+    try {
+        await $fetch('/api/symptoms', {
+            method: 'POST',
+            body: quickSymptom.value
+        })
+        quickSymptom.value.name = ''
+        quickSymptom.value.severity = 5
+        await refreshSymptoms()
+    } catch (e) {
+        alert('Failed to add symptom')
+    } finally {
+        addingSymptom.value = false
+    }
+}
+
 const attributes = computed(() => {
   return attributesRaw.value?.map(attr => ({
     id: attr.id,
@@ -87,7 +114,7 @@ watchEffect(() => {
         const me = userProfiles.value.find(p => p.type === 'me')
         
         // If we only have the default initial guest and it's empty, replace with 'me'
-        if (guests.value.length === 1 && guests.value[0].name === 'Invité 1' && guests.value[0].constraints.length === 0 && !guests.value[0].isProfile) {
+        if (guests.value.length === 1 && guests.value[0]?.name === 'Invité 1' && guests.value[0]?.constraints.length === 0 && !guests.value[0]?.isProfile) {
              if (me) {
                  guests.value = [mapProfileToGuest(me)]
              }
@@ -196,6 +223,7 @@ const availableProfiles = computed(() => {
         </div>
     </div>
 
+
     <!-- Guest Forms -->
     <div class="space-y-8 max-w-4xl mx-auto">
       <UCard v-for="(guest, gIdx) in guests" :key="guest.id">
@@ -258,5 +286,40 @@ const availableProfiles = computed(() => {
         </UButton>
       </div>
     </div>
+
+
+    <!-- Active Symptoms Section -->
+    <div v-if="user" class="mb-8 ">
+        <UCard class="bg-gray-50 border-dashed border-2 mt-4">
+            <template #header>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-700">Symptômes en cours</h3>
+                    <UButton variant="link" to="/symptoms">Gérer</UButton>
+                </div>
+            </template>
+            
+            <div class="flex flex-wrap gap-2 mb-4">
+                 <div v-for="s in symptoms" :key="s.id" class="relative group">
+                    <UBadge :color="(s.color as any)" size="lg" class="pr-2">
+                        {{ s.name }} ({{s.severity}}/10)
+                    </UBadge>
+                 </div>
+                 <div v-if="!symptoms || symptoms.length === 0" class="text-gray-400 italic text-sm">
+                     Aucun symptôme actif
+                 </div>
+            </div>
+
+            <div class="flex gap-2 items-center border-t pt-4">
+                <UInput v-model="quickSymptom.name" placeholder="Nouveau symptôme..." class="flex-1" />
+                <div class="w-32">
+                     <USlider v-model="quickSymptom.severity" :min="1" :max="10" />
+                </div>
+                <div class="font-bold w-6 text-center">{{ quickSymptom.severity }}</div>
+                <UButton icon="i-heroicons-plus" :loading="addingSymptom" @click="addQuickSymptom">Ajouter</UButton>
+            </div>
+        </UCard>
+    </div>
   </UContainer>
+
+
 </template>

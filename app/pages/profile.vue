@@ -149,9 +149,10 @@ function getAttributeLabel(id: string) {
                     <div class="flex justify-between">
                         <span class="font-bold">{{ profile.name }}</span>
                         <UBadge :color="profile.type === 'me' ? 'primary' : 'neutral'">{{ profile.type }}</UBadge>
+                        <UButton size="sm" variant="ghost" icon="i-heroicons-pencil" @click="openEditMatrix(profile)" />
+                        <UButton v-if="profile.type !== 'me'" size="sm" color="error" variant="ghost" icon="i-heroicons-trash" @click="deleteProfile(profile.id)" />
                     </div>
                 </template>
-
                 <div class="text-sm space-y-1">
                     <div v-if="!profile.constraints || Object.keys(profile.constraints).length === 0" class="text-gray-400 italic">
                         Aucune contrainte
@@ -163,13 +164,6 @@ function getAttributeLabel(id: string) {
                         </span>
                     </div>
                 </div>
-
-                <template #footer>
-                    <div class="flex justify-end gap-2">
-                        <UButton size="sm" variant="ghost" icon="i-heroicons-pencil" @click="openEditMatrix(profile)" />
-                        <UButton v-if="profile.type !== 'me'" size="sm" color="error" variant="ghost" icon="i-heroicons-trash" @click="deleteProfile(profile.id)" />
-                    </div>
-                </template>
             </UCard>
         </div>
 

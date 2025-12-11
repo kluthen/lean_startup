@@ -14,6 +14,11 @@ const items = computed(() => [
       to: '/profile'
     },
     {
+      label: 'Symptoms',
+      icon: 'i-heroicons-heart', // Or another appropriate icon like 'i-heroicons-clipboard-document-list'
+      to: '/symptoms'
+    },
+    {
       label: 'Logout',
       icon: 'i-heroicons-arrow-left-on-rectangle',
       click: logout

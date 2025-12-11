@@ -1,0 +1,44 @@
+export default eventHandler(async (event) => {
+    const user = event.context.user
+    if (!user) {
+        throw createError({
+            statusCode: 401,
+            statusMessage: 'Unauthorized'
+        })
+    }
+
+    const id = getRouterParam(event, 'id')
+    const body = await readBody(event)
+    const { severity, comments, color } = body
+
+    if (!id) {
+        throw createError({
+            statusCode: 400,
+            statusMessage: 'ID is required'
+        })
+    }
+
+    // Verify ownership
+    const symptom = await sql`
+      SELECT * FROM symptoms WHERE id = ${id} AND user_id = ${user.id}
+    `
+    if (symptom.length === 0) {
+        throw createError({
+            statusCode: 404,
+            statusMessage: 'Symptom not found'
+        })
+    }
+
+    const result = await sql`
+      UPDATE symptoms 
+      SET 
+        severity = ${severity}, 
+        comments = ${comments},
+        color = ${color},
+        last_update = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `
+
+    return result[0]
+})

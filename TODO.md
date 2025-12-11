@@ -36,21 +36,30 @@
 
 ## v0.0.6 User Profile management
 
-* [ ] add a user logic (still allow full anonymous access)
-* [ ] Database change: add user table, add a profile table (user_id, password_hash, name, type(me, familly, friend, freeform string),and a json constraints column). A user may have multiples profiles, with at least one that is himself. The constraint will be stored as is in json and will be directly appliable to the current constraint logic.
-* [ ] auth strategy must be as simple as possible for now, cookie based, with a session table and a session storage made available. (the option bcryptjs with cookies based session seems fine to me)
-* [ ] Profile constraints should be editable, and follow current constraints logic and display is provided in index page right now
-* [ ] add a profile page: manage constraints for user, manage familly and friends and their constraints. 
-    * [ ] when a user is logged in, the index page should preselect himself as participant to the meal, and allow to add familly members and friends as well. 
-    * [ ] while constraints are preloaded, they should be editable (locally, not in the database) and some can be added on the fly (like I want to eat strawberries today)
-* [ ] add a login page
-* [ ] add a register page
-* [ ] add a logout button
-* [ ] add a login button
-* [ ] add a register button
-* [ ] add a user menu in the top right
-* [ ] when user is not logged in, the index page should still allow to generate menu, only with guest, as it is right now. 
+* [x] add a user logic (still allow full anonymous access)
+* [x] Database change: add user table, add a profile table (user_id, password_hash, name, type(me, familly, friend, freeform string),and a json constraints column). A user may have multiples profiles, with at least one that is himself. The constraint will be stored as is in json and will be directly appliable to the current constraint logic.
+* [x] auth strategy must be as simple as possible for now, cookie based, with a session table and a session storage made available. (the option bcryptjs with cookies based session seems fine to me)
+* [x] Profile constraints should be editable, and follow current constraints logic and display is provided in index page right now
+* [x] add a profile page: manage constraints for user, manage familly and friends and their constraints. 
+    * [x] when a user is logged in, the index page should preselect himself as participant to the meal, and allow to add familly members and friends as well. 
+    * [x] while constraints are preloaded, they should be editable (locally, not in the database) and some can be added on the fly (like I want to eat strawberries today)
+* [x] add a login page
+* [x] add a register page
+* [x] add a logout button
+* [x] add a login button
+* [x] add a register button
+* [x] add a user menu in the top right
+* [x] when user is not logged in, the index page should still allow to generate menu, only with guest, as it is right now. 
 
+## v0.0.7 Symptoms management
+
+* [ ] add a symptoms table related to user: it must contains following informations: name (with a picker for previous symptoms), begin, last update and end date, severity (as a slider of 1-10), comments, color (to be used for display). if possible, checks if the name has already been used for this user, and if so find the same color as the previous one. 
+* [ ] just give me the migration, i'll have it executed.
+* [ ] add a symptoms page: manage symptoms for user, add new symptoms, mark running symptoms as ended, edit severity and comments, review symptoms history. 
+* [ ] this page is only accessible when logged in. 
+* [ ] Running symptoms are displayed in the index page, with a color bar matching the severity, with the option to mark it either as ended or as ongoing. If the symptom has been recently(< 30min) updated and not ended, consider it as ongoing (remove the form in this case)
+* [ ] add a short hand symptom form in the index page when logged in. 
+* [ ] add a link to the symptoms page in the user menu.
 
 ## v0.1
 
