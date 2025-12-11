@@ -139,8 +139,8 @@ function getAttributeLabel(id: string) {
 <template>
     <UContainer class="py-10">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Manage Profiles</h1>
-            <UButton icon="i-heroicons-plus" @click="openNewProfile">Add Profile</UButton>
+            <h1 class="text-2xl font-bold">Gestion des profils</h1>
+            <UButton icon="i-heroicons-plus" @click="openNewProfile">Ajouter un profil</UButton>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -154,10 +154,10 @@ function getAttributeLabel(id: string) {
 
                 <div class="text-sm space-y-1">
                     <div v-if="!profile.constraints || Object.keys(profile.constraints).length === 0" class="text-gray-400 italic">
-                        No constraints
+                        Aucune contrainte
                     </div>
                     <div v-for="(val, key) in profile.constraints" :key="key" class="flex justify-between">
-                        <span class="truncate pr-2">{{ getAttributeLabel(key as string) }}</span>
+                        <span class="truncate pr-2">{{ getAttributeLabel(String(key)) }}</span>
                         <span :class="`text-${getWeightByStep(val as number)?.color}-500 font-bold`">
                              {{ getWeightByStep(val as number)?.value }}
                         </span>
@@ -174,53 +174,53 @@ function getAttributeLabel(id: string) {
         </div>
 
         <!-- Edit Modal -->
-        <UModal v-model="isModalOpen">
-            <UCard class="overflow-visible"> 
-                <template #header>
-                    <div class="text-lg font-bold">{{ editingProfile?.id ? 'Edit' : 'New' }} Profile</div>
-                </template>
+        <UModal v-model:open="isModalOpen">
+            <template #content>
+                <UCard class="overflow-visible"> 
+                    <template #header>
+                        <div class="text-lg font-bold">{{ editingProfile?.id ? 'Modifier' : 'Nouveau' }} profil</div>
+                    </template>
+                    <div class="space-y-4">
+                        <UFormGroup label="Nom">
+                            <UInput v-model="editingProfile.name" placeholder="Nom du profil"/>
+                        </UFormGroup>
+                        
+                        <UFormGroup v-if="!editingProfile.id || editingProfile.type !== 'me'" label="Type">
+                            <UInput class="p-2" placeholder="Type du profil" v-model="editingProfile.type" :disabled="!!editingProfile.id" />
+                        </UFormGroup>
 
-                <div class="space-y-4">
-                    <UFormGroup label="Name">
-                        <UInput v-model="editingProfile.name" />
-                    </UFormGroup>
-                    
-                    <UFormGroup v-if="!editingProfile.id || editingProfile.type !== 'me'" label="Type">
-                        <UInput v-model="editingProfile.type" :disabled="!!editingProfile.id" />
-                    </UFormGroup>
-
-                    <div class="space-y-3">
-                        <label class="block text-sm font-medium text-gray-700">Constraints</label>
-                        <div v-for="(constraint, idx) in editingConstraints" :key="idx" class="flex gap-2 items-center">
-                             <USelectMenu 
-                                v-model="constraint.attributeId" 
-                                :items="attributes"
-                                valueKey="id"
-                                placeholder="Attribute..."
-                                class="flex-1 min-w-0"
-                             />
-                             <div class="w-32 flex flex-col gap-1">
-                                 <USlider 
-                                    v-model="constraint.stepValue" :min="0" :max="3" :step="1"
-                                    :color="getWeightByStep(constraint.stepValue)?.color"
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-gray-700">Contraintes</label>
+                            <div v-for="(constraint, idx) in editingConstraints" :key="idx" class="flex gap-2 items-center">
+                                 <USelectMenu 
+                                    v-model="constraint.attributeId" 
+                                    :items="attributes"
+                                    valueKey="id"
+                                    placeholder="Attribute..."
+                                    class="flex-1 min-w-0"
                                  />
-                                 <div class="text-[10px] text-center font-bold" :class="`text-${getWeightByStep(constraint.stepValue)?.color}-500`">
-                                    {{ getWeightByStep(constraint.stepValue)?.label }}
+                                 <div class="w-32 flex flex-col gap-1">
+                                     <USlider 
+                                        v-model="constraint.stepValue" :min="0" :max="3" :step="1"
+                                        :color="getWeightByStep(constraint.stepValue)?.color"
+                                     />
+                                     <div class="text-[10px] text-center font-bold" :class="`text-${getWeightByStep(constraint.stepValue)?.color}-500`">
+                                        {{ getWeightByStep(constraint.stepValue)?.label }}
+                                     </div>
                                  </div>
-                             </div>
-                             <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark" @click="removeConstraint(idx)" />
+                                 <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark" @click="removeConstraint(idx)" />
+                            </div>
+                            <UButton size="sm" variant="soft" icon="i-heroicons-plus" @click="addConstraint">Ajouter une contrainte</UButton>
                         </div>
-                        <UButton size="sm" variant="soft" icon="i-heroicons-plus" @click="addConstraint">Add Constraint</UButton>
                     </div>
-                </div>
-
-                <template #footer>
-                     <div class="flex justify-end gap-2">
-                        <UButton color="neutral" variant="ghost" @click="isModalOpen = false">Cancel</UButton>
-                        <UButton @click="saveProfile">Save</UButton>
-                     </div>
-                </template>
-            </UCard>
+                    <template #footer>
+                        <div class="flex justify-end gap-2">
+                            <UButton color="neutral" variant="ghost" @click="isModalOpen = false">Annuler</UButton>
+                            <UButton @click="saveProfile">Enregistrer</UButton>
+                        </div>
+                    </template>
+                </UCard>
+            </template>
         </UModal>
     </UContainer>
 </template>

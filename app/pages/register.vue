@@ -8,7 +8,7 @@ const handleRegister = async () => {
     try {
         await register(username.value, password.value)
     } catch (e: any) {
-        error.value = e.data?.message || 'Registration failed'
+        error.value = e.data?.message || 'Inscription echouée'
     }
 }
 </script>
@@ -16,23 +16,23 @@ const handleRegister = async () => {
 <template>
     <div class="flex items-center justify-center min-h-screen bg-gray-50">
         <div class="w-full max-w-md p-8 space-y-6 bg-white rounded shadow-md">
-            <h1 class="text-2xl font-bold text-center">Register</h1>
+            <h1 class="text-2xl font-bold text-center">S'inscrire</h1>
             <form @submit.prevent="handleRegister" class="space-y-4">
                 <div>
-                    <label class="block mb-1 text-sm font-medium">Username</label>
+                    <label class="block mb-1 text-sm font-medium">Utilisateur</label>
                     <input v-model="username" type="text" class="w-full px-3 py-2 border rounded" required />
                 </div>
                 <div>
-                    <label class="block mb-1 text-sm font-medium">Password</label>
+                    <label class="block mb-1 text-sm font-medium">Mot de passe</label>
                     <input v-model="password" type="password" class="w-full px-3 py-2 border rounded" required />
                 </div>
                 <div v-if="error" class="text-red-500 text-sm">{{ error }}</div>
                 <button type="submit" class="w-full px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
-                    Register
+                    S'inscrire
                 </button>
             </form>
              <div class="text-center text-sm">
-                Already have an account? <NuxtLink to="/login" class="text-blue-600 hover:underline">Login</NuxtLink>
+                Pas de compte ? <NuxtLink to="/login" class="text-blue-600 hover:underline">Se connecter</NuxtLink>
             </div>
         </div>
     </div>
