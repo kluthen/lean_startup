@@ -76,7 +76,9 @@ onMounted(() => {
     fetchDefinitions()
 })
 
+
 const openNewSymptom = () => {
+    console.log('[Frontend] Opening new symptom modal')
     isNew.value = true
     editingSymptom.value = { 
         name: '', 
@@ -93,15 +95,20 @@ const openEditSymptom = (s: any) => {
     isModalOpen.value = true
 }
 
-const onNameChange = () => {
+const onNameChange = (val: any) => {
+    console.log('[Frontend] Name changed:', val, 'Current model:', editingSymptom.value.name)
     // If name matches a definition, pre-fill color
+    if (!editingSymptom.value.name) return
     const def = definitions.value.find(d => d.name.toLowerCase() === editingSymptom.value.name.toLowerCase())
     if (def && isNew.value) {
+        console.log('[Frontend] Found definition, checking color:', def.color)
         editingSymptom.value.color = def.color
     }
 }
 
 const saveSymptom = async () => {
+    console.log('[Frontend] Saving symptom:', editingSymptom.value)
+
     try {
         if (isNew.value) {
             await $fetch('/api/symptoms', {
